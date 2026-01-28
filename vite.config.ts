@@ -6,9 +6,7 @@ import react from '@vitejs/plugin-react';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default defineConfig(({ mode }) => {
-
-  return {
+export default defineConfig({
     base: '/latex-resume-ai-refiner/',
     plugins: [react()],
     esbuild: {
@@ -42,5 +40,4 @@ export default defineConfig(({ mode }) => {
         '@utils': path.resolve(__dirname, './src/utils')
       }
     }
-  };
-});
+  });
