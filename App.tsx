@@ -3,9 +3,10 @@ import React, { useState, useCallback, useRef } from 'react';
 import { FileTree } from './components/FileTree';
 import { Editor } from './components/Editor';
 import { AIPanel } from './components/AIPanel';
+import { ResumePreview } from './components/ResumePreview';
 import { FileNode, ProjectState } from './types';
 import { extractZip, createZip } from './utils/zipUtils';
-import { Upload, Download, FileText, Bot, PanelLeftClose, PanelRightClose } from 'lucide-react';
+import { Upload, Download, FileText, Bot, PanelLeftClose, PanelRightClose, Eye, EyeOff } from 'lucide-react';
 
 const App: React.FC = () => {
   const [project, setProject] = useState<ProjectState>({
@@ -14,6 +15,11 @@ const App: React.FC = () => {
   });
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(256);
+  const [previewWidth, setPreviewWidth] = useState(600);
+  const [isDraggingSidebar, setIsDraggingSidebar] = useState(false);
+  const [isDraggingPreview, setIsDraggingPreview] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -88,6 +94,37 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
+  // Draggable divider handlers
+  const handleSidebarDragStart = () => setIsDraggingSidebar(true);
+  const handlePreviewDragStart = () => setIsDraggingPreview(true);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isDraggingSidebar) {
+      const newWidth = Math.max(200, Math.min(500, e.clientX));
+      setSidebarWidth(newWidth);
+    }
+    if (isDraggingPreview) {
+      const newWidth = Math.max(400, Math.min(800, window.innerWidth - e.clientX));
+      setPreviewWidth(newWidth);
+    }
+  }, [isDraggingSidebar, isDraggingPreview]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDraggingSidebar(false);
+    setIsDraggingPreview(false);
+  }, []);
+
+  React.useEffect(() => {
+    if (isDraggingSidebar || isDraggingPreview) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDraggingSidebar, isDraggingPreview, handleMouseMove, handleMouseUp]);
+
   return (
     <div className="flex h-screen w-full bg-white overflow-hidden flex-col">
       {/* Header */}
@@ -125,14 +162,24 @@ const App: React.FC = () => {
             <Download size={16} />
             Download Refined
           </button>
+          <button
+            onClick={() => setIsPreviewOpen(!isPreviewOpen)}
+            disabled={!activeFile || !activeFile.name.endsWith('.tex')}
+            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${isPreviewOpen
+                ? 'bg-green-600 text-white shadow-inner'
+                : 'bg-green-50 text-green-700 hover:bg-green-100'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            {isPreviewOpen ? <EyeOff size={16} /> : <Eye size={16} />}
+            Preview
+          </button>
           <div className="h-6 w-px bg-gray-200 mx-1"></div>
           <button
             onClick={() => setIsAIPanelOpen(!isAIPanelOpen)}
-            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-              isAIPanelOpen 
-                ? 'bg-purple-600 text-white shadow-inner' 
+            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${isAIPanelOpen
+                ? 'bg-purple-600 text-white shadow-inner'
                 : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
-            }`}
+              }`}
           >
             <Bot size={16} />
             AI Refiner
@@ -143,7 +190,10 @@ const App: React.FC = () => {
       {/* Main Content Area */}
       <main className="flex flex-1 overflow-hidden relative">
         {/* Sidebar */}
-        <div className={`transition-all duration-300 ease-in-out border-r bg-gray-50 flex flex-col ${isSidebarOpen ? 'w-64' : 'w-0 overflow-hidden border-none'}`}>
+        <div
+          className="border-r bg-gray-50 flex flex-col transition-all duration-200"
+          style={{ width: isSidebarOpen ? `${sidebarWidth}px` : '0px', overflow: isSidebarOpen ? 'visible' : 'hidden' }}
+        >
           <div className="p-3 border-b flex items-center justify-between bg-white">
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Project Files</span>
             <button onClick={() => setIsSidebarOpen(false)} className="text-gray-400 hover:text-gray-600">
@@ -160,13 +210,23 @@ const App: React.FC = () => {
             ) : (
               <div className="p-8 text-center">
                 <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                   <Upload size={20} className="text-gray-400" />
+                  <Upload size={20} className="text-gray-400" />
                 </div>
                 <p className="text-gray-400 text-xs">No project loaded.</p>
               </div>
             )}
           </div>
         </div>
+
+        {/* Sidebar Drag Handle */}
+        {isSidebarOpen && (
+          <div
+            onMouseDown={handleSidebarDragStart}
+            className="w-1 bg-gray-200 hover:bg-blue-500 cursor-col-resize transition-colors group relative"
+          >
+            <div className="absolute inset-y-0 -left-1 -right-1" />
+          </div>
+        )}
 
         {!isSidebarOpen && (
           <button
@@ -192,6 +252,37 @@ const App: React.FC = () => {
               <p className="text-sm font-medium">Select a file to begin editing</p>
             </div>
           )}
+        </div>
+
+        {/* Preview Drag Handle */}
+        {isPreviewOpen && activeFile?.name.endsWith('.tex') && (
+          <div
+            onMouseDown={handlePreviewDragStart}
+            className="w-1 bg-gray-200 hover:bg-blue-500 cursor-col-resize transition-colors group relative"
+          >
+            <div className="absolute inset-y-0 -left-1 -right-1" />
+          </div>
+        )}
+
+        {/* Preview Panel */}
+        <div
+          className="border-l flex flex-col bg-gray-100 transition-all duration-200"
+          style={{ width: isPreviewOpen && activeFile?.name.endsWith('.tex') ? `${previewWidth}px` : '0px', overflow: isPreviewOpen && activeFile?.name.endsWith('.tex') ? 'visible' : 'hidden' }}
+        >
+          <div className="p-3 border-b flex items-center justify-between bg-white shrink-0">
+            <div className="flex items-center gap-2">
+              <Eye size={18} className="text-green-600" />
+              <span className="font-semibold text-gray-700">Live Preview</span>
+            </div>
+            <button onClick={() => setIsPreviewOpen(false)} className="text-gray-400 hover:text-gray-600">
+              <PanelRightClose size={14} />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-6">
+            {activeFile && activeFile.name.endsWith('.tex') && (
+              <ResumePreview mainFile={activeFile} allFiles={project.files} />
+            )}
+          </div>
         </div>
 
         {/* AI Panel */}
@@ -220,7 +311,7 @@ const App: React.FC = () => {
             <div className="relative">
               <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-100 border-t-blue-600"></div>
               <div className="absolute inset-0 flex items-center justify-center">
-                 <FileText size={16} className="text-blue-600" />
+                <FileText size={16} className="text-blue-600" />
               </div>
             </div>
             <div>
