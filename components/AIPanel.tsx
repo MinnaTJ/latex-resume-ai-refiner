@@ -22,7 +22,7 @@ export const AIPanel: React.FC<AIPanelProps> = ({ projectFiles, onApplySuggestio
     try {
       const response = await refineResume(projectFiles, jobDescription);
       setResults(response);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setError("Failed to refine. Check console for details.");
     } finally {

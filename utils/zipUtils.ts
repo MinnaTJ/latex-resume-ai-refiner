@@ -9,8 +9,7 @@ export async function extractZip(file: File): Promise<FileNode[]> {
 
   // Create folder/file entries
   for (const [path, entry] of Object.entries(zip.files)) {
-    // Cast to any because Object.entries might infer values as unknown in some TS configurations
-    const zipEntry = entry as any;
+    const zipEntry = entry as JSZip.JSZipObject;
     const parts = path.split('/').filter(p => p !== '');
     if (parts.length === 0) continue;
 
@@ -21,7 +20,7 @@ export async function extractZip(file: File): Promise<FileNode[]> {
       const part = parts[i];
       const isLast = i === parts.length - 1;
       const nodePath = currentPath + (currentPath ? '/' : '') + part;
-      
+
       let node = fileMap[nodePath];
 
       if (!node) {

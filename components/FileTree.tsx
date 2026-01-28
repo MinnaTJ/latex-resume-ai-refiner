@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { FileNode } from '../types';
-import { ChevronRight, ChevronDown, FileCode, Folder, ImageIcon, FileText } from 'lucide-react';
+import { ChevronRight, ChevronDown, FileCode, ImageIcon, FileText } from 'lucide-react';
 
 interface FileTreeProps {
   nodes: FileNode[];
@@ -54,9 +54,8 @@ const FileTreeNode: React.FC<{
     <div>
       <div
         onClick={handleClick}
-        className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer text-sm transition-colors ${
-          isActive ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'hover:bg-gray-100 text-gray-600'
-        }`}
+        className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer text-sm transition-colors ${isActive ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'hover:bg-gray-100 text-gray-600'
+          }`}
         style={{ paddingLeft: `${depth * 12 + 12}px` }}
       >
         <span className="shrink-0">{getIcon()}</span>

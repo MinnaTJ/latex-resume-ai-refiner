@@ -16,7 +16,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ mainFile, allFiles
 
   // Helper to find a file in the project tree by name or path
   const findFile = (nodes: FileNode[], fileName: string): FileNode | null => {
-    const cleanFileName = fileName.trim().replace(/^.*[\\\/]/, ''); // Just the name
+    const cleanFileName = fileName.trim().replace(/^.*[\\/]/, ''); // Just the name
     const search = (list: FileNode[]): FileNode | null => {
       for (const node of list) {
         if (node.name === cleanFileName || node.path.endsWith('/' + cleanFileName) || node.path === fileName) return node;
@@ -90,7 +90,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ mainFile, allFiles
     body = body.replace(/[0-9.]+[lcr]@[lcr]/g, '');
     // Remove list parameters like leftmargin=0.15in, label=
     body = body.replace(/leftmargin\s*=\s*[0-9.]+[a-z]+/gi, '');
-    body = body.replace(/label\s*=\s*[^,\}]*/gi, '');
+    body = body.replace(/label\s*=\s*[^,}]*/gi, '');
     // Remove \$ symbols (dollar signs used in LaTeX math mode)
     body = body.replace(/\\\$/g, '');
     // Remove orphaned multiple closing braces
@@ -250,7 +250,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ mainFile, allFiles
         {!renderedResume.trim() && (
           <div className="flex flex-col items-center justify-center h-[200mm] text-gray-300 italic border-2 border-dashed rounded-xl">
             <p className="text-xl font-bold mb-2">Visualizer Ready</p>
-            <p className="text-sm">Click 'Visual Preview' on your main .tex file</p>
+            <p className="text-sm">Click &apos;Visual Preview&apos; on your main .tex file</p>
           </div>
         )}
       </div>
